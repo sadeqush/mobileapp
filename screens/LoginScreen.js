@@ -11,7 +11,10 @@ export default class LoginScreen extends React.Component {
     this.state = {
       email: '',
       password: '',
-      title: 'Login'
+      title: 'Login',
+      errorMessage: '',
+      wrongpassword: false,
+      return: []
     }
 
     console.log(props)
@@ -31,22 +34,25 @@ export default class LoginScreen extends React.Component {
     .then(response => response.json())
     .then(json => {
         console.log(`Logging in with session token: ${json.user.session_token}`)
-        SecureStore.setItemAsync('session', json.user.session_token).then(() => {
+        SecureStore.setItemAsync('session', json.user.session_token)
+        SecureStore.setItemAsync('user', json.user.user_id)
+        .then(() => {
         this.props.route.params.onLoggedIn();
-        this.setState({title: 'Logged in!'});
       })
-    })
-    
+    }).then(
+      this.setState({
+        wrongpassword: true,
+        errorMessage: 'Sorry your Username/Password was Wrong'})
+    )
   }
+
 
   render() {
     const { email, password } = this.state
-
-    // this could use some error handling!
-    // the user will never know if the login failed.
+    
     return (
       <View style={styles.container}>
-        <Text style={styles.loginText}>{this.state.title}</Text>
+        <Text style={styles.loginText}>Login to CFire!</Text>
         <TextInput
           style={styles.input}
           onChangeText={text => this.setState({ email: text })}
@@ -61,6 +67,7 @@ export default class LoginScreen extends React.Component {
           secureTextEntry={true}
         />
         <Button title="Submit" onPress={() => this.onSubmit()} />
+    <Text style={styles.errorText}>{this.state.errorMessage}</Text>
       </View>
     );
   }
@@ -77,6 +84,13 @@ const styles = StyleSheet.create({
     fontSize: 30,
     textAlign: "center",
     marginBottom: 30
+  },
+  errorText: {
+    color: 'red',
+    padding: 20,
+    marginTop: 15,
+    fontSize: 18,
+    textAlign: 'center',
   },
   input: {
     height: 40,
